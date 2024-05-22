@@ -1,8 +1,35 @@
 import React from 'react'
 import { View, Text, Image,TouchableOpacity,StyleSheet } from 'react-native'
+import * as WebBrowser from "expo-web-browser";
+import { useOAuth } from "@clerk/clerk-expo";
+import { useWarmUpBrowser } from "./../../hooks/useWarmUpBrowser";
 
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
+
+        // Warm up the android browser to improve UX
+        // https://docs.expo.dev/guides/authentication/#improving-user-experience
+        useWarmUpBrowser();
+
+        const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+
+        const onPress = React.useCallback(async () => {
+            try {
+                const { createdSessionId, signIn, signUp, setActive } =
+                await startOAuthFlow();
+        
+                if (createdSessionId) {
+                setActive({ session: createdSessionId });
+                } else {
+                // Use signIn or signUp for next steps such as MFA
+                console.log('SignIn or SignUp required for further steps.');
+                }
+            } catch (err) {
+                console.error("OAuth error", err);
+            }
+            }, [startOAuthFlow]);
+
     return (
         <View style={styles.container}>
             <Image source={require('./../../assets/images/login.jpg')}
@@ -13,7 +40,7 @@ export default function LoginScreen() {
             <View className="p-5 bg-white mt-[-20px] rounded-t-3xl shadow-md">
                 <Text className="text-[25px] text-center font-bold">Community Marketplace</Text>
                 <Text className="text-[18px] text-slate-500 mt-4">Buy Sell Marketplace where you can sell old items and make real money</Text>
-                <TouchableOpacity className="p-4 mt-4 bg-blue-500 rounded-full">
+                <TouchableOpacity onPress={onPress} className="p-4 mt-4 bg-blue-500 rounded-full">
                 <Text className="text-white text-center text-[18px]">Get Started </Text>
                 </TouchableOpacity>
                 
