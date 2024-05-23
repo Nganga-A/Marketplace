@@ -12,9 +12,9 @@ export default function App() {
         <View className="flex-1 bg-white"> 
             <StatusBar style="auto"/>
                 <SignedIn>
-                    <NavigationContainer>
+                    {/* <NavigationContainer> */}
                         <TabNavigation/>
-                    </NavigationContainer>
+                    {/* </NavigationContainer> */}
                 </SignedIn>
                 <SignedOut>
                     <LoginScreen/>
