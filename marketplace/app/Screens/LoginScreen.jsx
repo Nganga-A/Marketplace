@@ -7,7 +7,6 @@ import { useWarmUpBrowser } from "./../../hooks/useWarmUpBrowser";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-
         // Warm up the android browser to improve UX
         // https://docs.expo.dev/guides/authentication/#improving-user-experience
         useWarmUpBrowser();
