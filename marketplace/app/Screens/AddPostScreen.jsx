@@ -8,13 +8,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Yup from 'yup';
+import {getStorage, ref, uploadBytes} from 'firebase/storage';
 
 export default function AddPostScreen() {
 
     const db = getFirestore(app);
     const [categoryList, setCategoryList] = useState([]);
     const [image, setImage] = useState(null);
-
+    const storage = getStorage();
+    
     useEffect(() => {
         getCategoryList();
     }, []);
@@ -44,13 +46,24 @@ export default function AddPostScreen() {
         });
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
+        // Update image state
+        setImage(result.assets[0].uri);
+        // Set image field value in Formik
+        setFieldValue('image', result.assets[0].uri); // Ensure you have setFieldValue from Formik props
+    
         }
     };
 
-    const onSubmitMethod=(value) => {
-        value.image=image;
-        console.log(value);
+    const onSubmitMethod=async(value) => {
+        value.image=image;        
+        //Convert Uri to Blob File
+        const resp = await fetch(image);
+        const blob = await resp.blob();
+        const storageRef = ref(storage, 'communityPost/'+Date.now()+'.jpg');
+
+        uploadBytes(storageRef, blob).then((snapshot) => {
+            console.log('Uploaded a blob or file!');
+        });
     }
 
     const validationSchema = Yup.object().shape({
@@ -80,7 +93,7 @@ export default function AddPostScreen() {
                     enableReinitialize
                     validationSchema={validationSchema}
                 >
-                    {({ handleChange, handleBlur, handleSubmit, values, touched, errors }) => (
+                    {({ handleChange, handleBlur, handleSubmit, values,setFieldValue, touched, errors }) => (
                         <View>
                             <TouchableOpacity onPress={pickImage}>
                                 <Image source={image ? { uri: image } : require('../../assets/images/imagePlaceholder.png')}
