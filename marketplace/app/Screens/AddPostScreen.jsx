@@ -36,7 +36,7 @@ export default function AddPostScreen() {
     };
     
     
-    const pickImage = async () => {
+    const pickImage = async (setFieldValue) => {
         // No permissions request is necessary for launching the image library
         let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -49,22 +49,30 @@ export default function AddPostScreen() {
         // Update image state
         setImage(result.assets[0].uri);
         // Set image field value in Formik
-        setFieldValue('image', result.assets[0].uri); // Ensure you have setFieldValue from Formik props
+        setFieldValue('image', result.assets[0].uri);
     
         }
     };
 
-    const onSubmitMethod=async(value) => {
-        value.image=image;        
-        //Convert Uri to Blob File
-        const resp = await fetch(image);
-        const blob = await resp.blob();
-        const storageRef = ref(storage, 'communityPost/'+Date.now()+'.jpg');
+    const onSubmitMethod = async (values) => {
+        const { image, ...rest } = values; // Destructure 'image' from 'values'
 
-        uploadBytes(storageRef, blob).then((snapshot) => {
+        try {
+            // Convert URI to Blob File
+            const resp = await fetch(image);
+            const blob = await resp.blob();
+            const storageRef = ref(storage, `communityPost/${Date.now()}.jpg`);
+
+            // Upload blob to Firebase Storage
+            await uploadBytes(storageRef, blob);
             console.log('Uploaded a blob or file!');
-        });
-    }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            // Handle error state or display a message to the user
+        }
+    };
+        
+    
 
     const validationSchema = Yup.object().shape({
         title: Yup.string().required('Title is required'),
@@ -95,7 +103,7 @@ export default function AddPostScreen() {
                 >
                     {({ handleChange, handleBlur, handleSubmit, values,setFieldValue, touched, errors }) => (
                         <View>
-                            <TouchableOpacity onPress={pickImage}>
+                            <TouchableOpacity  onPress={()=>pickImage(setFieldValue)}>
                                 <Image source={image ? { uri: image } : require('../../assets/images/imagePlaceholder.png')}
                                     style={{ width: 280, height: 90, borderRadius: 5 }} />
                             </TouchableOpacity>
@@ -146,7 +154,7 @@ export default function AddPostScreen() {
                                 selectedValue={values?.Category}
                                 style={styles.input}
                                 onValueChange={handleChange('Category')}
-                                className
+                                
                             >
                                 {categoryList&&categoryList.map((item, index) => (
                                     <Picker.Item key={index} 
