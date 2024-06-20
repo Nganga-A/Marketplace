@@ -1,14 +1,15 @@
-import { View,Image, Text, StyleSheet, TouchableOpacity ,ScrollView, KeyboardAvoidingView, Platform} from 'react-native';
+import { View,Image, Text, StyleSheet, TouchableOpacity ,ScrollView, KeyboardAvoidingView, Platform, Alert} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { app } from '../../firebaseConfig';
-import { getFirestore, getDocs, collection } from "firebase/firestore";
+import { getFirestore, getDocs, collection, addDoc } from "firebase/firestore";
 import { Formik } from 'formik';
 import { TextInput } from 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Yup from 'yup';
-import {getStorage, ref, uploadBytes} from 'firebase/storage';
+import {getDownloadURL, getStorage, ref, uploadBytes} from 'firebase/storage';
+import { useUser } from '@clerk/clerk-expo';
 
 export default function AddPostScreen() {
 
@@ -16,6 +17,8 @@ export default function AddPostScreen() {
     const [categoryList, setCategoryList] = useState([]);
     const [image, setImage] = useState(null);
     const storage = getStorage();
+    const {user} = useUser();
+    const [loading, setLoading] = useState(false);
     
     useEffect(() => {
         getCategoryList();
@@ -54,32 +57,44 @@ export default function AddPostScreen() {
         }
     };
 
-    const onSubmitMethod = async (values) => {
-        const { image, ...rest } = values; // Destructure 'image' from 'values'
 
-        try {
+    const onSubmitMethod = async (value) => {
+
             // Convert URI to Blob File
             const resp = await fetch(image);
             const blob = await resp.blob();
             const storageRef = ref(storage, `communityPost/${Date.now()}.jpg`);
 
             // Upload blob to Firebase Storage
-            await uploadBytes(storageRef, blob);
-            console.log('Uploaded a blob or file!');
-        } catch (error) {
-            console.error('Error uploading file:', error);
-            // Handle error state or display a message to the user
-        }
+            uploadBytes(storageRef, blob).then((snapshot) => {
+                console.log('Uploaded a blob or file!');
+            }).then ((resp) => {
+                getDownloadURL(storageRef).then(async(downloadURL) => {
+                    console.log(downloadURL);
+                    value.image=downloadURL;
+                    value.userName=user.fullName,
+                    value.userEmail=user.primaryEmailAddress.emailAddress
+                    value.userImage=user.imageUrl;
+
+
+                const docRef = await addDoc(collection(db, 'UserPost'), value)
+                    if (docRef.id)
+                        {
+                        setLoading(false);
+                        // console.log('Document successfully Added!');
+                        Alert.alert('Success!!!','Post Added Successfully.')
+                    }
+                })
+            })
     };
         
-    
 
     const validationSchema = Yup.object().shape({
         title: Yup.string().required('Title is required'),
         desc: Yup.string().required('Description is required'),
         price: Yup.number().required('Price is required').positive('Price must be positive'),
         address: Yup.string().required('Address is required'),
-        category: Yup.string().required('Category is required'),
+        Category: Yup.string().required('Category is required'),
         image: Yup.string().required('Image is required'),
     });
 
@@ -96,7 +111,7 @@ export default function AddPostScreen() {
                 <Text className='text-[27px] text-center font-bold'>Add New Post</Text>
                 <Text className='text-[18px] text-gray-600 mb-5'>Create New Post and Start Selling</Text>
                 <Formik
-                    initialValues={{ title: '', desc: '', category: categoryList.length > 0 ? categoryList[0].name : '', address: '', price: '', image: '' }}
+                    initialValues={{ title: '', desc: '', address: '', price: '', image: '', userName:'', userEmail:'', userImage:'' }}
                     onSubmit={onSubmitMethod}
                     enableReinitialize
                     validationSchema={validationSchema}
@@ -163,8 +178,18 @@ export default function AddPostScreen() {
                             </Picker>
                             </View>
 
-                            <TouchableOpacity onPress={handleSubmit} className='p-4 bg-blue-400 rounded-2xl'>
-                                <Text className='text-white text-center text-[16px]'>Submit</Text>
+                            <TouchableOpacity onPress={handleSubmit}
+                                className='p-4 bg-blue-400 rounded-2xl'
+                                style={{
+                                    backgroundColor:loading ? '#ccc' : '#007BFF',
+                                }}
+                                disabled={loading}
+                                >
+                                    {loading ?
+                                        <ActivityIndicator color="#fff" /> 
+                                        : <Text className='text-white text-center text-[16px]'>Submit</Text>
+                                    }
+                                
                             </TouchableOpacity>
 
                         </View>
