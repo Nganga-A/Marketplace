@@ -1,4 +1,4 @@
-import { View,Image, Text, StyleSheet, TouchableOpacity ,ScrollView, KeyboardAvoidingView, Platform, Alert} from 'react-native';
+import { View,Image, Text, StyleSheet, TouchableOpacity ,ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { app } from '../../firebaseConfig';
 import { getFirestore, getDocs, collection, addDoc } from "firebase/firestore";
@@ -59,7 +59,7 @@ export default function AddPostScreen() {
 
 
     const onSubmitMethod = async (value) => {
-
+            setLoading(true);
             // Convert URI to Blob File
             const resp = await fetch(image);
             const blob = await resp.blob();
@@ -180,15 +180,14 @@ export default function AddPostScreen() {
 
                             <TouchableOpacity onPress={handleSubmit}
                                 className='p-4 bg-blue-400 rounded-2xl'
-                                style={{
-                                    backgroundColor:loading ? '#ccc' : '#007BFF',
-                                }}
+                                style={{backgroundColor:loading ? '#ccc' : '#007BFF'}}
                                 disabled={loading}
                                 >
-                                    {loading ?
-                                        <ActivityIndicator color="#fff" /> 
-                                        : <Text className='text-white text-center text-[16px]'>Submit</Text>
-                                    }
+                                    {loading ? (
+                                        <ActivityIndicator size="small" color="#fff" style={{ zIndex:1 }} /> 
+                                    ) : (
+                                        <Text className='text-white text-center text-[16px]'>Submit</Text> 
+                                    )}
                                 
                             </TouchableOpacity>
 
