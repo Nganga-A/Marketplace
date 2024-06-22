@@ -5,14 +5,21 @@ import { Ionicons } from '@expo/vector-icons'
 
 export default function Header() {
     const {user} = useUser();
+
     return (
         <View>
             {/* {User Info */}
-            <View className="flex flex-row items-center gap-2"> 
-                <Image source={{uri:user?.imageUrl}} className="rounded-full w-11 h-11"/>
-                <View>
-                    <Text className="text-[17px]">Welcome</Text>
-                    <Text className="text-[18px] font-bold">{user?.fullName}</Text>
+            <View className="flex flex-row items-center justify-between"> 
+                <View className="flex flex-row items-center gap-2 flex-1">
+                    <Image source={{uri:user?.imageUrl}} className="rounded-full w-12 h-12"/>
+                    <View>
+                        <Text className="text-[17px]">Welcome</Text>
+                        <Text className="text-[18px] font-bold">{user?.fullName}</Text>
+                    </View>
+                </View>
+                {/* {Logo} */}
+                <View className="flex flex-row items-center">
+                    <Image source={require('../../../assets/images/logo.png')} className="w-14 h-14" />
                 </View>
             </View>
 
@@ -22,6 +29,8 @@ export default function Header() {
                 <TextInput className="ml-3 text-[16px]" placeholder='Search' 
                     onChangeText={(value) => console.log(value)}/>
             </View>
+
+            
         </View>
     )
 }
