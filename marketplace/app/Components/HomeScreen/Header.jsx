@@ -24,7 +24,7 @@ export default function Header() {
             </View>
 
             {/* {Search Bar} */}
-            <View className='p-3 px-5 mt-5 bg-white rounded-full flex flex-row items-center border-[1px] border-blue-200'>
+            <View className='p-2 px-5 mt-4 bg-blue-50 rounded-full flex flex-row items-center border-[1px] border-gray-300'>
                 <Ionicons name="search" size={24} color="gray" />
                 <TextInput className="ml-3 text-[16px]" placeholder='Search' 
                     onChangeText={(value) => console.log(value)}/>
